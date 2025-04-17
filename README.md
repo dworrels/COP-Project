@@ -15,10 +15,12 @@ Shortest path calculation using a custom min-heap (HeapQueue) and Dijkstra's alg
 Two test graphs included: one numeric, one campus-based
 
 
-Graph.hpp          # Graph class interface with Edge and Vertex structures
-Graph.cpp          # Full implementation of the Graph class
-HeapQueue.hpp      # Custom min-heap (priority queue) template
-main.cpp           # Main driver with two test graphs
+***Graph.hpp***         - Graph class interface with Edge and Vertex structures
 
-### Compile with C++17:
-g++ -std=c++17 main.cpp Graph.cpp
+***Graph.cpp***          - Full implementation of the Graph class
+
+***HeapQueue.hpp***      - Custom min-heap (priority queue) template
+
+***main.cpp***           - Main driver with two test graphs<br>&nbsp;<br>
+
+**Compile with C++17:** g++ -std=c++17 main.cpp Graph.cpp
