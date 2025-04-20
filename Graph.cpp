@@ -1,139 +1,177 @@
-// This one
-
 #include "Graph.hpp"
 
-// Define a constant for max value
-const unsigned long MAX_WEIGHT = 1000000000; // A large value for the "infinity"
+//Constant to hold value for "infinity"
+const unsigned long MAX_WEIGHT = 1000000000;
 
-void Graph::addVertex(std::string label) {
-    if (findVertexIndex(label) != -1) return;
+//Adds a vertex with the given label if it doesn't already exist on graph
+void Graph::addVertex(std::string label)
+{
+    if (findVertexIndex(label) != -1)   //Vertex exists already
+        return;
+
     vertices.push_back({label, {}});
 }
 
-void Graph::removeVertex(std::string label) {
+//Removes specified vertex and its edges from graph
+void Graph::removeVertex(std::string label)
+{
     int idx = findVertexIndex(label);
-    if (idx == -1) return;
+    if (idx == -1) return;  //Vertex DNE
 
-    vertices.erase(vertices.begin() + idx);
-    for (auto& vertex : vertices) {
-        // Manually remove the edge from adj list
-        for (auto it = vertex.adj.begin(); it != vertex.adj.end(); ) {
-            if (it->label == label) {
-                it = vertex.adj.erase(it);
-            } else {
+    vertices.erase(vertices.begin() + idx); //Remove vertex
+
+    for (auto& vertex : vertices)   //Remove edges of vertex
+    {
+        for (auto it = vertex.adj.begin(); it != vertex.adj.end(); )
+        {
+            if (it->label == label)
+                it = vertex.adj.erase(it);  //Remove edge
+            else
                 ++it;
-            }
         }
     }
 }
 
-void Graph::addEdge(std::string label1, std::string label2, unsigned long weight) {
-    if (label1 == label2) return;
+//Adds an edge between two vertices with specified weight
+void Graph::addEdge(std::string label1, std::string label2, unsigned long weight)
+{
+    if (label1 == label2) return;   //Prevents self loops
+
     int i = findVertexIndex(label1);
     int j = findVertexIndex(label2);
-    if (i == -1 || j == -1 || edgeExists(label1, label2)) return;
+    
+    if (i == -1 || j == -1 || edgeExists(label1, label2))   //Invalid vertices or edge already exists
+        return;
 
+    //Add edge to both vertices
     vertices[i].adj.emplace_back(Edge{label2, weight});
     vertices[j].adj.emplace_back(Edge{label1, weight});
 }
 
-void Graph::removeEdge(std::string label1, std::string label2) {
+//Removes an edge between two vertices
+void Graph::removeEdge(std::string label1, std::string label2)
+{
     int i = findVertexIndex(label1);
     int j = findVertexIndex(label2);
-    if (i == -1 || j == -1) return;
+    if (i == -1 || j == -1) //Vertices DNE
+        return;
 
-    // Manually remove the edge from adj list
-    for (auto it = vertices[i].adj.begin(); it != vertices[i].adj.end(); ) {
-        if (it->label == label2) {
+    //Removes edge from vertex i -> j
+    for (auto it = vertices[i].adj.begin(); it != vertices[i].adj.end(); )
+    {
+        if (it->label == label2)
             it = vertices[i].adj.erase(it);
-        } else {
+        else
             ++it;
-        }
     }
 
-    for (auto it = vertices[j].adj.begin(); it != vertices[j].adj.end(); ) {
-        if (it->label == label1) {
+    //Removes edge from vertex j -> i
+    for (auto it = vertices[j].adj.begin(); it != vertices[j].adj.end(); )
+    {
+        if (it->label == label1)
             it = vertices[j].adj.erase(it);
-        } else {
+        else
             ++it;
-        }
     }
 }
 
-unsigned long Graph::shortestPath(std::string startLabel, std::string endLabel, std::vector<std::string>& path) {
-    std::vector<std::pair<unsigned long, std::string>> dist; // Stores distances (using label and distance)
-    std::vector<std::string> prev(vertices.size(), ""); // To store previous vertices for path
+//Dijkstra's algorithm to find the shortest path between vertices
+unsigned long Graph::shortestPath(std::string startLabel, std::string endLabel, std::vector<std::string>& path)
+{
+    std::vector<std::pair<unsigned long, std::string>> dist; //(Distance, Label) pairs
+    std::vector<std::string> prev(vertices.size(), ""); //Store previous vertices for path
 
     // Initialize distances to "infinity"
-    for (const auto& vertex : vertices) {
+    for (const auto& vertex : vertices)
+    {
         dist.push_back({MAX_WEIGHT, vertex.label});
     }
-    dist[findVertexIndex(startLabel)].first = 0; // Distance from start to itself is 0
+    dist[findVertexIndex(startLabel)].first = 0;    //Distance to start vertex = 0
 
-    // Initialize the visited array
+    //Array to track visitied vertices
     std::vector<bool> visited(vertices.size(), false);
 
-    // Start Dijkstra's algorithm (no priority queue, linear search for min dist)
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        // Find the vertex with the smallest distance
+    //Loop for Dijkstra's algorithm
+    for (size_t i = 0; i < vertices.size(); ++i) 
+    {
+        //Find the vertex with the smallest distance
         unsigned long minDist = MAX_WEIGHT;
         int u = -1;
-        for (size_t j = 0; j < dist.size(); ++j) {
-            if (!visited[j] && dist[j].first < minDist) {
+
+        for (size_t j = 0; j < dist.size(); ++j)
+        {
+            if (!visited[j] && dist[j].first < minDist)
+            {
                 minDist = dist[j].first;
                 u = j;
             }
         }
 
-        if (u == -1) break; // All reachable vertices have been visited
+        if (u == -1) break; //All reachable vertices have been visited
 
         visited[u] = true;
         std::string currLabel = dist[u].second;
         int vertexIndex = findVertexIndex(currLabel);
 
-        // Update distances to neighboring vertices
-        for (const auto& edge : vertices[vertexIndex].adj) {
+        //Update distances for neighboring vertices
+        for (const auto& edge : vertices[vertexIndex].adj)
+        {
             int v = findVertexIndex(edge.label);
-            if (visited[v]) continue; // Skip visited vertices
+
+            if (visited[v])
+            continue;   //Skip visited vertices
 
             unsigned long alt = dist[u].first + edge.weight;
-            if (alt < dist[v].first) {
+            if (alt < dist[v].first)
+            {
                 dist[v].first = alt;
                 prev[v] = currLabel;
             }
         }
     }
 
-    // Reconstruct the shortest path
+    //Reconstruct the shortest path end to start labels
     path.clear();
     std::string curr = endLabel;
     int endIndex = findVertexIndex(curr);
 
-    if (dist[endIndex].first == MAX_WEIGHT) {
-        return MAX_WEIGHT; // no path found
-    }
+    if (dist[endIndex].first == MAX_WEIGHT)
+        return MAX_WEIGHT;  //No path found
 
-    while (curr != startLabel) {
+    //Go back from end to start
+    while (curr != startLabel)
+    {
         path.insert(path.begin(), curr);
         curr = prev[findVertexIndex(curr)];
     }
     path.insert(path.begin(), startLabel);
 
-    return dist[findVertexIndex(endLabel)].first;
+    return dist[findVertexIndex(endLabel)].first; //Return weight of the shortest path
 }
 
-int Graph::findVertexIndex(const std::string& label) const {
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        if (vertices[i].label == label) return static_cast<int>(i);
+//Finds the index of a vertex by label
+int Graph::findVertexIndex(const std::string& label) const
+{
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        if (vertices[i].label == label)
+            return static_cast<int>(i);
     }
-    return -1;
+    return -1;  //Vertex not found
 }
 
-bool Graph::edgeExists(const std::string& label1, const std::string& label2) const {
+//Checks if an edge exists between two vertices
+bool Graph::edgeExists(const std::string& label1, const std::string& label2) const
+{
     int i = findVertexIndex(label1);
-    if (i == -1) return false;
-    for (const auto& edge : vertices[i].adj) {
-        if (edge.label == label2) return true;
+
+    if (i == -1)
+        return false;
+
+    for (const auto& edge : vertices[i].adj)
+    {
+        if (edge.label == label2)
+            return true;
     }
     return false;
 }
